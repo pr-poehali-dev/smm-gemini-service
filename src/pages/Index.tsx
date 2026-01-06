@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
 
@@ -32,8 +31,6 @@ export default function Index() {
     setGeneratedPost('');
 
     try {
-      const proxyUrl = 'http://user341025:64tojn@104.164.25.231:1879';
-      
       const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=AIzaSyCi5NWYP0_tnNYOXxyJxj6s2fL_KXxTsq4', {
         method: 'POST',
         headers: {
@@ -110,17 +107,16 @@ export default function Index() {
                 <Icon name="MessageSquare" size={20} className="text-primary" />
                 Платформа
               </Label>
-              <Select value={platform} onValueChange={setPlatform}>
-                <SelectTrigger className="h-12">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="telegram">📱 Telegram</SelectItem>
-                  <SelectItem value="vk">🔵 ВКонтакте</SelectItem>
-                  <SelectItem value="instagram">📸 Instagram</SelectItem>
-                  <SelectItem value="facebook">👥 Facebook</SelectItem>
-                </SelectContent>
-              </Select>
+              <select
+                value={platform}
+                onChange={(e) => setPlatform(e.target.value)}
+                className="flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                <option value="telegram">📱 Telegram</option>
+                <option value="vk">🔵 ВКонтакте</option>
+                <option value="instagram">📸 Instagram</option>
+                <option value="facebook">👥 Facebook</option>
+              </select>
             </div>
 
             <div className="space-y-2">
@@ -141,19 +137,18 @@ export default function Index() {
                 <Icon name="Smile" size={20} className="text-primary" />
                 Тон поста
               </Label>
-              <Select value={tone} onValueChange={setTone}>
-                <SelectTrigger className="h-12">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="дружелюбный">😊 Дружелюбный</SelectItem>
-                  <SelectItem value="профессиональный">💼 Профессиональный</SelectItem>
-                  <SelectItem value="вдохновляющий">🌟 Вдохновляющий</SelectItem>
-                  <SelectItem value="юмористический">😄 Юмористический</SelectItem>
-                  <SelectItem value="информационный">📚 Информационный</SelectItem>
-                  <SelectItem value="провокационный">🔥 Провокационный</SelectItem>
-                </SelectContent>
-              </Select>
+              <select
+                value={tone}
+                onChange={(e) => setTone(e.target.value)}
+                className="flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                <option value="дружелюбный">😊 Дружелюбный</option>
+                <option value="профессиональный">💼 Профессиональный</option>
+                <option value="вдохновляющий">🌟 Вдохновляющий</option>
+                <option value="юмористический">😄 Юмористический</option>
+                <option value="информационный">📚 Информационный</option>
+                <option value="провокационный">🔥 Провокационный</option>
+              </select>
             </div>
 
             <div className="space-y-2">
@@ -161,18 +156,17 @@ export default function Index() {
                 <Icon name="Crosshair" size={20} className="text-primary" />
                 Цель поста
               </Label>
-              <Select value={goal} onValueChange={setGoal}>
-                <SelectTrigger className="h-12">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="вовлечение">💬 Вовлечение</SelectItem>
-                  <SelectItem value="продажа">💰 Продажа</SelectItem>
-                  <SelectItem value="информирование">📢 Информирование</SelectItem>
-                  <SelectItem value="развлечение">🎉 Развлечение</SelectItem>
-                  <SelectItem value="обучение">🎓 Обучение</SelectItem>
-                </SelectContent>
-              </Select>
+              <select
+                value={goal}
+                onChange={(e) => setGoal(e.target.value)}
+                className="flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                <option value="вовлечение">💬 Вовлечение</option>
+                <option value="продажа">💰 Продажа</option>
+                <option value="информирование">📢 Информирование</option>
+                <option value="развлечение">🎉 Развлечение</option>
+                <option value="обучение">🎓 Обучение</option>
+              </select>
             </div>
 
             <div className="space-y-2">
@@ -180,16 +174,15 @@ export default function Index() {
                 <Icon name="AlignLeft" size={20} className="text-primary" />
                 Длина поста
               </Label>
-              <Select value={length} onValueChange={setLength}>
-                <SelectTrigger className="h-12">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="короткий">⚡ Короткий</SelectItem>
-                  <SelectItem value="средний">📝 Средний</SelectItem>
-                  <SelectItem value="длинный">📄 Длинный</SelectItem>
-                </SelectContent>
-              </Select>
+              <select
+                value={length}
+                onChange={(e) => setLength(e.target.value)}
+                className="flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                <option value="короткий">⚡ Короткий</option>
+                <option value="средний">📝 Средний</option>
+                <option value="длинный">📄 Длинный</option>
+              </select>
             </div>
 
             <div className="space-y-2">
@@ -197,17 +190,16 @@ export default function Index() {
                 <Icon name="Sparkles" size={20} className="text-primary" />
                 Количество эмодзи
               </Label>
-              <Select value={emojis} onValueChange={setEmojis}>
-                <SelectTrigger className="h-12">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="нет">🚫 Без эмодзи</SelectItem>
-                  <SelectItem value="мало">🙂 Мало</SelectItem>
-                  <SelectItem value="баланс">✨ Баланс</SelectItem>
-                  <SelectItem value="много">🎨 Супер много</SelectItem>
-                </SelectContent>
-              </Select>
+              <select
+                value={emojis}
+                onChange={(e) => setEmojis(e.target.value)}
+                className="flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                <option value="нет">🚫 Без эмодзи</option>
+                <option value="мало">🙂 Мало</option>
+                <option value="баланс">✨ Баланс</option>
+                <option value="много">🎨 Супер много</option>
+              </select>
             </div>
 
             <Button
