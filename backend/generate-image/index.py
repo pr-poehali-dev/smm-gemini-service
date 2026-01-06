@@ -80,19 +80,12 @@ def handler(event: dict, context) -> dict:
                 'body': json.dumps({'error': 'GEMINI_API_KEY не настроен'})
             }
         
-        gemini_url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={gemini_api_key}'
+        gemini_url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key={gemini_api_key}'
         
         gemini_request = {
             'contents': [{
                 'parts': [{'text': prompt}]
-            }],
-            'generationConfig': {
-                'temperature': 0.9,
-                'topK': 40,
-                'topP': 0.95,
-                'maxOutputTokens': 8192,
-                'responseMimeType': 'text/plain'
-            }
+            }]
         }
         
         req = urllib.request.Request(
@@ -109,16 +102,27 @@ def handler(event: dict, context) -> dict:
         with urllib.request.urlopen(req, timeout=60) as response:
             gemini_response = json.loads(response.read().decode('utf-8'))
         
-        if 'candidates' in gemini_response and gemini_response['candidates']:
-            generated_text = gemini_response['candidates'][0]['content']['parts'][0]['text']
+        if 'candidates' in gemini_response and len(gemini_response['candidates']) > 0:
+            parts = gemini_response['candidates'][0]['content']['parts']
+            
+            for part in parts:
+                if 'inlineData' in part and 'data' in part['inlineData']:
+                    image_data = part['inlineData']['data']
+                    mime_type = part['inlineData'].get('mimeType', 'image/png')
+                    
+                    return {
+                        'statusCode': 200,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({
+                            'imageUrl': f'data:{mime_type};base64,{image_data}',
+                            'prompt': prompt
+                        })
+                    }
             
             return {
-                'statusCode': 200,
+                'statusCode': 500,
                 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({
-                    'imageUrl': f'data:image/png;base64,{generated_text}',
-                    'prompt': prompt
-                })
+                'body': json.dumps({'error': 'Нет изображения в ответе от Gemini'})
             }
         else:
             return {
