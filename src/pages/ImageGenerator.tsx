@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -9,11 +9,22 @@ import Icon from '@/components/ui/icon';
 
 export default function ImageGenerator() {
   const { toast } = useToast();
+  const location = useLocation();
   const [task, setTask] = useState('');
   const [style, setStyle] = useState('фотореализм');
   const [aspectRatio, setAspectRatio] = useState('квадрат');
   const [generatedImageUrl, setGeneratedImageUrl] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+
+  useEffect(() => {
+    if (location.state?.initialPrompt) {
+      setTask(location.state.initialPrompt);
+      toast({
+        title: 'Промпт загружен! ✨',
+        description: 'Описание изображения создано на основе вашего поста',
+      });
+    }
+  }, [location.state, toast]);
 
   const styles = [
     { value: 'фотореализм', label: '📷 Фотореализм', prompt: 'Photorealistic, ultra-detailed, professional photography' },

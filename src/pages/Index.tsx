@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,7 @@ import Icon from '@/components/ui/icon';
 
 export default function Index() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [platform, setPlatform] = useState('telegram');
   const [task, setTask] = useState('');
   const [tone, setTone] = useState('anya_vibe');
@@ -75,6 +76,18 @@ export default function Index() {
     toast({
       title: 'Скопировано! 📋',
       description: 'Пост скопирован в буфер обмена',
+    });
+  };
+
+  const createImagePrompt = () => {
+    if (!generatedPost) return;
+    
+    const imagePrompt = `Создай иллюстрацию для поста: ${generatedPost.slice(0, 200)}`;
+    navigate('/images', { state: { initialPrompt: imagePrompt } });
+    
+    toast({
+      title: 'Переход к генерации! 🎨',
+      description: 'Промпт подготовлен для создания изображения',
     });
   };
 
@@ -232,15 +245,26 @@ export default function Index() {
                 Результат
               </Label>
               {generatedPost && (
-                <Button
-                  onClick={copyToClipboard}
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                >
-                  <Icon name="Copy" size={16} />
-                  Копировать
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={copyToClipboard}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <Icon name="Copy" size={16} />
+                    Копировать
+                  </Button>
+                  <Button
+                    onClick={createImagePrompt}
+                    variant="default"
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <Icon name="Image" size={16} />
+                    Создать картинку
+                  </Button>
+                </div>
               )}
             </div>
 
