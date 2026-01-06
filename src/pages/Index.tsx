@@ -1,14 +1,295 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import Icon from '@/components/ui/icon';
 
-const Index = () => {
+export default function Index() {
+  const { toast } = useToast();
+  const [platform, setPlatform] = useState('telegram');
+  const [task, setTask] = useState('');
+  const [tone, setTone] = useState('дружелюбный');
+  const [goal, setGoal] = useState('вовлечение');
+  const [length, setLength] = useState('средний');
+  const [emojis, setEmojis] = useState('баланс');
+  const [generatedPost, setGeneratedPost] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const generatePost = async () => {
+    if (!task.trim()) {
+      toast({
+        title: 'Ошибка',
+        description: 'Опишите, что хотите получить от поста',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    setGeneratedPost('');
+
+    try {
+      const proxyUrl = 'http://user341025:64tojn@104.164.25.231:1879';
+      
+      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=AIzaSyCi5NWYP0_tnNYOXxyJxj6s2fL_KXxTsq4', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `Создай пост для ${platform === 'telegram' ? 'Telegram' : platform === 'vk' ? 'ВКонтакте' : platform === 'instagram' ? 'Instagram' : 'социальной сети'}.
+
+Задача: ${task}
+
+Требования:
+- Тон: ${tone}
+- Цель поста: ${goal}
+- Длина: ${length === 'короткий' ? 'до 200 символов' : length === 'средний' ? '200-500 символов' : 'более 500 символов'}
+- Эмодзи: ${emojis === 'нет' ? 'не использовать эмодзи' : emojis === 'мало' ? 'использовать 1-2 эмодзи' : emojis === 'баланс' ? 'использовать 3-5 эмодзи' : 'использовать много эмодзи (8-12)'}
+
+Напиши готовый пост для ${platform === 'telegram' ? 'Telegram канала AnyaGPT' : platform === 'vk' ? 'группы AnyaGPT ВКонтакте' : platform === 'instagram' ? 'Instagram профиля AnyaGPT' : 'AnyaGPT'}. Только текст поста, без пояснений.`
+            }]
+          }]
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+        setGeneratedPost(data.candidates[0].content.parts[0].text);
+        toast({
+          title: 'Готово! 🎉',
+          description: 'Пост успешно создан',
+        });
+      } else {
+        throw new Error('Не удалось получить ответ');
+      }
+    } catch (error) {
+      toast({
+        title: 'Ошибка генерации',
+        description: 'Не удалось создать пост. Попробуйте еще раз.',
+        variant: 'destructive',
+      });
+      console.error(error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(generatedPost);
+    toast({
+      title: 'Скопировано! 📋',
+      description: 'Пост скопирован в буфер обмена',
+    });
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4 color-black text-black">Добро пожаловать!</h1>
-        <p className="text-xl text-gray-600">тут будет отображаться ваш проект</p>
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 p-4 md:p-8">
+      <div className="max-w-5xl mx-auto space-y-8 animate-fade-in">
+        <div className="text-center space-y-4">
+          <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-primary to-secondary rounded-full shadow-lg">
+            <span className="text-3xl">✨</span>
+            <h1 className="text-2xl md:text-3xl font-bold text-white">AnyaGPT Generator</h1>
+            <span className="text-3xl">✨</span>
+          </div>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Создавайте идеальные посты для соцсетей с помощью AI
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          <Card className="p-6 space-y-6 shadow-xl border-2 hover:border-primary/50 transition-all duration-300">
+            <div className="space-y-2">
+              <Label className="text-lg font-semibold flex items-center gap-2">
+                <Icon name="MessageSquare" size={20} className="text-primary" />
+                Платформа
+              </Label>
+              <Select value={platform} onValueChange={setPlatform}>
+                <SelectTrigger className="h-12">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="telegram">📱 Telegram</SelectItem>
+                  <SelectItem value="vk">🔵 ВКонтакте</SelectItem>
+                  <SelectItem value="instagram">📸 Instagram</SelectItem>
+                  <SelectItem value="facebook">👥 Facebook</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-lg font-semibold flex items-center gap-2">
+                <Icon name="Target" size={20} className="text-primary" />
+                Задача поста
+              </Label>
+              <Textarea
+                value={task}
+                onChange={(e) => setTask(e.target.value)}
+                placeholder="Опишите, что хотите получить от текста..."
+                className="min-h-[120px] resize-none"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-lg font-semibold flex items-center gap-2">
+                <Icon name="Smile" size={20} className="text-primary" />
+                Тон поста
+              </Label>
+              <Select value={tone} onValueChange={setTone}>
+                <SelectTrigger className="h-12">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="дружелюбный">😊 Дружелюбный</SelectItem>
+                  <SelectItem value="профессиональный">💼 Профессиональный</SelectItem>
+                  <SelectItem value="вдохновляющий">🌟 Вдохновляющий</SelectItem>
+                  <SelectItem value="юмористический">😄 Юмористический</SelectItem>
+                  <SelectItem value="информационный">📚 Информационный</SelectItem>
+                  <SelectItem value="провокационный">🔥 Провокационный</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-lg font-semibold flex items-center gap-2">
+                <Icon name="Crosshair" size={20} className="text-primary" />
+                Цель поста
+              </Label>
+              <Select value={goal} onValueChange={setGoal}>
+                <SelectTrigger className="h-12">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="вовлечение">💬 Вовлечение</SelectItem>
+                  <SelectItem value="продажа">💰 Продажа</SelectItem>
+                  <SelectItem value="информирование">📢 Информирование</SelectItem>
+                  <SelectItem value="развлечение">🎉 Развлечение</SelectItem>
+                  <SelectItem value="обучение">🎓 Обучение</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-lg font-semibold flex items-center gap-2">
+                <Icon name="AlignLeft" size={20} className="text-primary" />
+                Длина поста
+              </Label>
+              <Select value={length} onValueChange={setLength}>
+                <SelectTrigger className="h-12">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="короткий">⚡ Короткий</SelectItem>
+                  <SelectItem value="средний">📝 Средний</SelectItem>
+                  <SelectItem value="длинный">📄 Длинный</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-lg font-semibold flex items-center gap-2">
+                <Icon name="Sparkles" size={20} className="text-primary" />
+                Количество эмодзи
+              </Label>
+              <Select value={emojis} onValueChange={setEmojis}>
+                <SelectTrigger className="h-12">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="нет">🚫 Без эмодзи</SelectItem>
+                  <SelectItem value="мало">🙂 Мало</SelectItem>
+                  <SelectItem value="баланс">✨ Баланс</SelectItem>
+                  <SelectItem value="много">🎨 Супер много</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button
+              onClick={generatePost}
+              disabled={isGenerating}
+              size="lg"
+              className="w-full h-14 text-lg font-bold bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl"
+            >
+              {isGenerating ? (
+                <>
+                  <Icon name="Loader2" size={24} className="animate-spin mr-2" />
+                  Генерирую...
+                </>
+              ) : (
+                <>
+                  <Icon name="Wand2" size={24} className="mr-2" />
+                  Создать пост
+                </>
+              )}
+            </Button>
+          </Card>
+
+          <Card className="p-6 space-y-4 shadow-xl border-2 hover:border-secondary/50 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <Label className="text-lg font-semibold flex items-center gap-2">
+                <Icon name="FileText" size={20} className="text-secondary" />
+                Результат
+              </Label>
+              {generatedPost && (
+                <Button
+                  onClick={copyToClipboard}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Icon name="Copy" size={16} />
+                  Копировать
+                </Button>
+              )}
+            </div>
+
+            <div className="min-h-[600px] bg-muted/30 rounded-lg p-6 relative">
+              {!generatedPost && !isGenerating && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
+                  <div className="text-6xl mb-4 animate-bounce">🎨</div>
+                  <p className="text-xl font-semibold text-muted-foreground mb-2">
+                    Ваш пост появится здесь
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Заполните параметры и нажмите "Создать пост"
+                  </p>
+                </div>
+              )}
+
+              {isGenerating && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <Icon name="Sparkles" size={64} className="text-primary animate-pulse mb-4" />
+                  <p className="text-lg font-semibold text-primary animate-pulse">
+                    Создаю идеальный пост...
+                  </p>
+                </div>
+              )}
+
+              {generatedPost && (
+                <div className="whitespace-pre-wrap text-base leading-relaxed animate-fade-in">
+                  {generatedPost}
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
+
+        <div className="text-center text-sm text-muted-foreground">
+          <p className="flex items-center justify-center gap-2">
+            Powered by
+            <span className="font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              Gemini 2.5 Flash
+            </span>
+            ⚡
+          </p>
+        </div>
       </div>
     </div>
   );
-};
-
-export default Index;
+}
