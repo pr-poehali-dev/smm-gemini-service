@@ -10,7 +10,7 @@ export default function Index() {
   const { toast } = useToast();
   const [platform, setPlatform] = useState('telegram');
   const [task, setTask] = useState('');
-  const [tone, setTone] = useState('дружелюбный');
+  const [tone, setTone] = useState('anya_vibe');
   const [goal, setGoal] = useState('вовлечение');
   const [length, setLength] = useState('средний');
   const [emojis, setEmojis] = useState('баланс');
@@ -133,6 +133,7 @@ export default function Index() {
                 onChange={(e) => setTone(e.target.value)}
                 className="flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               >
+                <option value="anya_vibe">🎓✨ Anya Vibe (фирменный стиль)</option>
                 <option value="дружелюбный">😊 Дружелюбный</option>
                 <option value="профессиональный">💼 Профессиональный</option>
                 <option value="вдохновляющий">🌟 Вдохновляющий</option>
