@@ -1,0 +1,376 @@
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import Icon from '@/components/ui/icon';
+
+interface Topic {
+  title: string;
+  description: string;
+}
+
+export default function Documents() {
+  const { toast } = useToast();
+  const [docType, setDocType] = useState('реферат');
+  const [subject, setSubject] = useState('');
+  const [pages, setPages] = useState(10);
+  const [additionalInfo, setAdditionalInfo] = useState('');
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [isGeneratingTopics, setIsGeneratingTopics] = useState(false);
+  const [isGeneratingDocument, setIsGeneratingDocument] = useState(false);
+  const [generatedDocument, setGeneratedDocument] = useState('');
+
+  const generateTopics = async () => {
+    if (!subject.trim()) {
+      toast({
+        title: 'Ошибка',
+        description: 'Укажите тему документа',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsGeneratingTopics(true);
+    setTopics([]);
+    setGeneratedDocument('');
+
+    try {
+      const response = await fetch('https://functions.poehali.dev/9c7241f8-e160-4157-aadb-22c4ef67c6d8', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          docType,
+          subject,
+          pages,
+          additionalInfo
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok && data.topics) {
+        setTopics(data.topics);
+        toast({
+          title: 'Готово! 📋',
+          description: 'Темы сгенерированы. Отредактируйте при необходимости.',
+        });
+      } else {
+        throw new Error(data.error || 'Не удалось получить темы');
+      }
+    } catch (error) {
+      toast({
+        title: 'Ошибка генерации',
+        description: 'Не удалось сгенерировать темы. Попробуйте еще раз.',
+        variant: 'destructive',
+      });
+      console.error(error);
+    } finally {
+      setIsGeneratingTopics(false);
+    }
+  };
+
+  const updateTopic = (index: number, field: 'title' | 'description', value: string) => {
+    const newTopics = [...topics];
+    newTopics[index][field] = value;
+    setTopics(newTopics);
+  };
+
+  const generateDocument = async () => {
+    if (topics.length === 0) {
+      toast({
+        title: 'Ошибка',
+        description: 'Сначала сгенерируйте темы',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsGeneratingDocument(true);
+    setGeneratedDocument('');
+
+    try {
+      const response = await fetch('https://functions.poehali.dev/fb2bbd98-5374-45dd-a776-d5d0713c661b', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          docType,
+          subject,
+          pages,
+          topics,
+          additionalInfo
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok && data.document) {
+        setGeneratedDocument(data.document);
+        toast({
+          title: 'Готово! 🎉',
+          description: 'Документ успешно создан',
+        });
+      } else {
+        throw new Error(data.error || 'Не удалось создать документ');
+      }
+    } catch (error) {
+      toast({
+        title: 'Ошибка генерации',
+        description: 'Не удалось создать документ. Попробуйте еще раз.',
+        variant: 'destructive',
+      });
+      console.error(error);
+    } finally {
+      setIsGeneratingDocument(false);
+    }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(generatedDocument);
+    toast({
+      title: 'Скопировано! 📋',
+      description: 'Документ скопирован в буфер обмена',
+    });
+  };
+
+  const downloadDocument = () => {
+    const blob = new Blob([generatedDocument], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${docType}_${subject.slice(0, 30)}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: 'Скачано! 💾',
+      description: 'Документ сохранен на ваше устройство',
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-8 animate-fade-in">
+        <div className="text-center space-y-4">
+          <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-primary to-secondary rounded-full shadow-lg">
+            <span className="text-3xl">📚</span>
+            <h1 className="text-2xl md:text-3xl font-bold text-white">AnyaGPT Documents</h1>
+            <span className="text-3xl">📝</span>
+          </div>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Создавайте рефераты, курсовые и доклады с помощью AI
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Link to="/">
+              <Button variant="outline" size="lg" className="font-semibold">
+                📝 Текст постов
+              </Button>
+            </Link>
+            <Link to="/images">
+              <Button variant="outline" size="lg" className="font-semibold">
+                🎨 Изображения
+              </Button>
+            </Link>
+            <Button variant="default" size="lg" className="font-semibold">
+              📚 Документы
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-6">
+          <div className="space-y-6">
+            <Card className="p-6 space-y-6 shadow-xl border-2 hover:border-primary/50 transition-all duration-300">
+              <div className="space-y-2">
+                <Label className="text-lg font-semibold flex items-center gap-2">
+                  <Icon name="FileText" size={20} className="text-primary" />
+                  Тип документа
+                </Label>
+                <select
+                  value={docType}
+                  onChange={(e) => setDocType(e.target.value)}
+                  className="flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                >
+                  <option value="реферат">📄 Реферат</option>
+                  <option value="курсовая">🎓 Курсовая работа</option>
+                  <option value="доклад">📢 Доклад</option>
+                  <option value="эссе">✍️ Эссе</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-lg font-semibold flex items-center gap-2">
+                  <Icon name="BookOpen" size={20} className="text-primary" />
+                  Тема
+                </Label>
+                <Input
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  placeholder="Например: Искусственный интеллект в медицине"
+                  className="h-12"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-lg font-semibold flex items-center gap-2">
+                  <Icon name="FileStack" size={20} className="text-primary" />
+                  Количество страниц А4
+                </Label>
+                <div className="flex items-center gap-4">
+                  <Input
+                    type="number"
+                    value={pages}
+                    onChange={(e) => setPages(Math.max(1, Math.min(100, parseInt(e.target.value) || 1)))}
+                    min="1"
+                    max="100"
+                    className="h-12 w-24"
+                  />
+                  <input
+                    type="range"
+                    value={pages}
+                    onChange={(e) => setPages(parseInt(e.target.value))}
+                    min="1"
+                    max="100"
+                    className="flex-1"
+                  />
+                  <span className="text-sm font-medium w-16 text-right">{pages} стр.</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-lg font-semibold flex items-center gap-2">
+                  <Icon name="Info" size={20} className="text-primary" />
+                  Дополнительные требования
+                </Label>
+                <Textarea
+                  value={additionalInfo}
+                  onChange={(e) => setAdditionalInfo(e.target.value)}
+                  placeholder="Укажите специфические требования, источники, акценты..."
+                  className="min-h-[100px] resize-none"
+                />
+              </div>
+
+              <Button 
+                onClick={generateTopics}
+                disabled={isGeneratingTopics}
+                className="w-full h-12 text-lg font-semibold"
+                size="lg"
+              >
+                {isGeneratingTopics ? (
+                  <>
+                    <Icon name="Loader2" size={20} className="animate-spin mr-2" />
+                    Генерирую темы...
+                  </>
+                ) : (
+                  <>
+                    <Icon name="Sparkles" size={20} className="mr-2" />
+                    Сгенерировать темы
+                  </>
+                )}
+              </Button>
+            </Card>
+
+            {topics.length > 0 && (
+              <Card className="p-6 space-y-4 shadow-xl border-2 border-primary/50">
+                <div className="flex items-center justify-between">
+                  <Label className="text-lg font-semibold flex items-center gap-2">
+                    <Icon name="List" size={20} className="text-primary" />
+                    Структура документа
+                  </Label>
+                  <span className="text-sm text-muted-foreground">{topics.length} разделов</span>
+                </div>
+                
+                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                  {topics.map((topic, index) => (
+                    <div key={index} className="space-y-2 p-4 bg-muted/50 rounded-lg">
+                      <Input
+                        value={topic.title}
+                        onChange={(e) => updateTopic(index, 'title', e.target.value)}
+                        className="font-semibold"
+                        placeholder="Название раздела"
+                      />
+                      <Textarea
+                        value={topic.description}
+                        onChange={(e) => updateTopic(index, 'description', e.target.value)}
+                        className="text-sm resize-none"
+                        rows={2}
+                        placeholder="Описание раздела"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <Button 
+                  onClick={generateDocument}
+                  disabled={isGeneratingDocument}
+                  className="w-full h-12 text-lg font-semibold"
+                  size="lg"
+                  variant="default"
+                >
+                  {isGeneratingDocument ? (
+                    <>
+                      <Icon name="Loader2" size={20} className="animate-spin mr-2" />
+                      Пишу документ...
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="FileEdit" size={20} className="mr-2" />
+                      Написать документ
+                    </>
+                  )}
+                </Button>
+              </Card>
+            )}
+          </div>
+
+          {generatedDocument && (
+            <div className="lg:sticky lg:top-8 h-fit">
+              <Card className="p-6 space-y-4 shadow-xl border-2 border-primary/50">
+                <div className="flex items-center justify-between">
+                  <Label className="text-lg font-semibold flex items-center gap-2">
+                    <Icon name="FileCheck" size={20} className="text-primary" />
+                    Готовый документ
+                  </Label>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={copyToClipboard}
+                    >
+                      <Icon name="Copy" size={16} className="mr-1" />
+                      Копировать
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={downloadDocument}
+                    >
+                      <Icon name="Download" size={16} className="mr-1" />
+                      Скачать
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="bg-muted/50 rounded-lg p-4 max-h-[600px] overflow-y-auto">
+                  <pre className="whitespace-pre-wrap text-sm font-mono">{generatedDocument}</pre>
+                </div>
+
+                <div className="text-xs text-muted-foreground text-center">
+                  Символов: {generatedDocument.length}
+                </div>
+              </Card>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -112,6 +112,11 @@ export default function Index() {
                 🎨 Изображения
               </Button>
             </Link>
+            <Link to="/documents">
+              <Button variant="outline" size="lg" className="font-semibold">
+                📚 Документы
+              </Button>
+            </Link>
           </div>
         </div>
 

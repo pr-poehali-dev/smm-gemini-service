@@ -149,6 +149,11 @@ export default function ImageGenerator() {
             <Button variant="default" size="lg" className="font-semibold">
               🎨 Изображения
             </Button>
+            <Link to="/documents">
+              <Button variant="outline" size="lg" className="font-semibold">
+                📚 Документы
+              </Button>
+            </Link>
           </div>
         </div>
 
