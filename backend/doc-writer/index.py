@@ -99,39 +99,38 @@ def handler(event: dict, context) -> dict:
             target_words = pages * words_per_page
             words_per_section = target_words // len(topics)
             
+            words_limit = min(target_words, 3000)
+            
             prompt = f"""Напиши академический {doc_type} на тему: {subject}
 
 СТРУКТУРА ДОКУМЕНТА:
 {topics_structure}
 
 ТРЕБОВАНИЯ:
-- Общий объем: примерно {pages} страниц А4 (~{target_words} слов)
-- На каждый раздел: ~{words_per_section} слов
+- Объем: МАКСИМУМ {words_limit} слов (это критично!)
 - Академический стиль, научная терминология
-- Логичное изложение с примерами
-- Между разделами должна быть связь
+- Логичное изложение с ключевыми моментами
 - НЕ нужно оглавление, список литературы или титульный лист
-- Начинай сразу с введения и основных разделов
-- Пиши КРАТКО и по делу - не раздувай текст водой
+- Начинай сразу с введения
 
 {f'Дополнительные требования: {additional_info}' if additional_info else ''}
 
 Формат ответа:
 ВВЕДЕНИЕ
-[текст введения - 2-3 абзаца]
+[2 абзаца]
 
 1. [Название первого раздела]
-[полный текст раздела]
+[основной текст]
 
 2. [Название второго раздела]
-[полный текст раздела]
+[основной текст]
 
 ...
 
 ЗАКЛЮЧЕНИЕ
-[текст заключения - 2-3 абзаца]
+[2 абзаца]
 
-ВАЖНО: Соблюдай указанный объем! Не пиши слишком много - это должно быть ровно {target_words} слов."""
+КРИТИЧНО: Уложись в {words_limit} слов! Пиши только главное."""
 
         gemini_url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={api_key}'
         
@@ -152,7 +151,7 @@ def handler(event: dict, context) -> dict:
             opener = urllib.request.build_opener(proxy_handler)
             urllib.request.install_opener(opener)
         
-        with urllib.request.urlopen(req, timeout=90) as response:
+        with urllib.request.urlopen(req, timeout=25) as response:
             gemini_response = json.loads(response.read().decode('utf-8'))
         
         if 'candidates' in gemini_response and gemini_response['candidates']:
