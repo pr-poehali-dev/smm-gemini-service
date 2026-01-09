@@ -37,6 +37,8 @@ def handler(event: dict, context) -> dict:
         pages = body.get('pages', 10)
         topics = body.get('topics', [])
         additional_info = body.get('additionalInfo', '')
+        section_title = body.get('sectionTitle', '')
+        section_description = body.get('sectionDescription', '')
         
         if not subject:
             return {
@@ -46,11 +48,11 @@ def handler(event: dict, context) -> dict:
                 'isBase64Encoded': False
             }
         
-        if mode == 'document' and (not topics or len(topics) == 0):
+        if mode == 'section' and not section_title:
             return {
                 'statusCode': 400,
                 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({'error': 'Не указана структура документа'}),
+                'body': json.dumps({'error': 'Не указан раздел'}),
                 'isBase64Encoded': False
             }
         
@@ -85,6 +87,22 @@ def handler(event: dict, context) -> dict:
 Названия лаконичные и конкретные. Описания информативные (2-3 предложения).
 
 ВАЖНО: Верни ТОЛЬКО JSON, без дополнительного текста, markdown или комментариев!"""
+        elif mode == 'section':
+            prompt = f"""Напиши раздел для академического документа ({doc_type}) на тему: {subject}
+
+РАЗДЕЛ: {section_title}
+ОПИСАНИЕ: {section_description}
+
+ТРЕБОВАНИЯ:
+- Объем: 300-500 слов
+- Академический стиль, научная терминология
+- Логичное изложение с примерами
+- Раскрывай тему полностью
+- Используй абзацы для структуры
+
+{f'Дополнительные требования: {additional_info}' if additional_info else ''}
+
+Напиши ТОЛЬКО текст раздела, без заголовка раздела."""
         else:
             topics_structure = '\n'.join([
                 f"{i+1}. {topic['title']}\n   {topic['description']}"
@@ -177,6 +195,13 @@ def handler(event: dict, context) -> dict:
                     'statusCode': 200,
                     'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
                     'body': json.dumps({'topics': topics_result}, ensure_ascii=False),
+                    'isBase64Encoded': False
+                }
+            elif mode == 'section':
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'text': result_text}, ensure_ascii=False),
                     'isBase64Encoded': False
                 }
             else:

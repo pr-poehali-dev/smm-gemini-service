@@ -22,6 +22,7 @@ export default function Documents() {
   const [topics, setTopics] = useState<Topic[]>([]);
   const [isGeneratingTopics, setIsGeneratingTopics] = useState(false);
   const [isGeneratingDocument, setIsGeneratingDocument] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
   const [generatedDocument, setGeneratedDocument] = useState('');
 
   const generateTopics = async () => {
@@ -103,34 +104,81 @@ export default function Documents() {
 
     setIsGeneratingDocument(true);
     setGeneratedDocument('');
+    setGenerationProgress(0);
 
     try {
-      const response = await fetch('https://functions.poehali.dev/338a4621-b5c0-4b9c-be04-0ed58cd55020', {
+      let fullDocument = `${docType.toUpperCase()}\n\nТема: ${subject}\n\n`;
+      
+      fullDocument += 'ВВЕДЕНИЕ\n\n';
+      const introResponse = await fetch('https://functions.poehali.dev/338a4621-b5c0-4b9c-be04-0ed58cd55020', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          mode: 'document',
+          mode: 'section',
           docType,
           subject,
-          pages,
-          topics,
+          sectionTitle: 'Введение',
+          sectionDescription: `Введение к ${docType} на тему "${subject}"`,
           additionalInfo
         }),
       });
-
-      const data = await response.json();
-      
-      if (response.ok && data.document) {
-        setGeneratedDocument(data.document);
-        toast({
-          title: 'Готово! 🎉',
-          description: 'Документ успешно создан',
-        });
-      } else {
-        throw new Error(data.error || 'Не удалось создать документ');
+      const introData = await introResponse.json();
+      if (introData.text) {
+        fullDocument += introData.text + '\n\n';
+        setGeneratedDocument(fullDocument);
       }
+      setGenerationProgress(Math.floor((1 / (topics.length + 2)) * 100));
+
+      for (let i = 0; i < topics.length; i++) {
+        const topic = topics[i];
+        fullDocument += `${i + 1}. ${topic.title.toUpperCase()}\n\n`;
+        
+        const sectionResponse = await fetch('https://functions.poehali.dev/338a4621-b5c0-4b9c-be04-0ed58cd55020', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            mode: 'section',
+            docType,
+            subject,
+            sectionTitle: topic.title,
+            sectionDescription: topic.description,
+            additionalInfo
+          }),
+        });
+        
+        const sectionData = await sectionResponse.json();
+        if (sectionData.text) {
+          fullDocument += sectionData.text + '\n\n';
+          setGeneratedDocument(fullDocument);
+        }
+        
+        setGenerationProgress(Math.floor(((i + 2) / (topics.length + 2)) * 100));
+      }
+
+      fullDocument += 'ЗАКЛЮЧЕНИЕ\n\n';
+      const conclusionResponse = await fetch('https://functions.poehali.dev/338a4621-b5c0-4b9c-be04-0ed58cd55020', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: 'section',
+          docType,
+          subject,
+          sectionTitle: 'Заключение',
+          sectionDescription: `Заключение к ${docType} на тему "${subject}"`,
+          additionalInfo
+        }),
+      });
+      const conclusionData = await conclusionResponse.json();
+      if (conclusionData.text) {
+        fullDocument += conclusionData.text + '\n\n';
+        setGeneratedDocument(fullDocument);
+      }
+      
+      setGenerationProgress(100);
+      toast({
+        title: 'Готово! 🎉',
+        description: 'Документ успешно создан',
+      });
     } catch (error) {
       toast({
         title: 'Ошибка генерации',
@@ -140,6 +188,7 @@ export default function Documents() {
       console.error(error);
     } finally {
       setIsGeneratingDocument(false);
+      setGenerationProgress(0);
     }
   };
 
@@ -327,25 +376,41 @@ export default function Documents() {
                   ))}
                 </div>
 
-                <Button 
-                  onClick={generateDocument}
-                  disabled={isGeneratingDocument}
-                  className="w-full h-12 text-lg font-semibold"
-                  size="lg"
-                  variant="default"
-                >
-                  {isGeneratingDocument ? (
-                    <>
-                      <Icon name="Loader2" size={20} className="animate-spin mr-2" />
-                      Пишу документ...
-                    </>
-                  ) : (
-                    <>
-                      <Icon name="FileEdit" size={20} className="mr-2" />
-                      Написать документ
-                    </>
+                <div className="space-y-2">
+                  {isGeneratingDocument && generationProgress > 0 && (
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Генерирую документ...</span>
+                        <span>{generationProgress}%</span>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div 
+                          className="bg-primary h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${generationProgress}%` }}
+                        />
+                      </div>
+                    </div>
                   )}
-                </Button>
+                  <Button 
+                    onClick={generateDocument}
+                    disabled={isGeneratingDocument}
+                    className="w-full h-12 text-lg font-semibold"
+                    size="lg"
+                    variant="default"
+                  >
+                    {isGeneratingDocument ? (
+                      <>
+                        <Icon name="Loader2" size={20} className="animate-spin mr-2" />
+                        Пишу документ...
+                      </>
+                    ) : (
+                      <>
+                        <Icon name="FileEdit" size={20} className="mr-2" />
+                        Написать документ
+                      </>
+                    )}
+                  </Button>
+                </div>
               </Card>
             )}
           </div>

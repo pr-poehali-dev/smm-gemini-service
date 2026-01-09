@@ -27,18 +27,19 @@
       "bodyMatcher": "partial"
     },
     {
-      "name": "Missing topics error",
+      "name": "Generate section",
       "method": "POST",
       "path": "/",
       "body": {
-        "docType": "курсовая",
-        "subject": "Тема",
-        "pages": 15,
-        "topics": []
+        "mode": "section",
+        "docType": "реферат",
+        "subject": "AI",
+        "sectionTitle": "Введение",
+        "sectionDescription": "Введение в тему"
       },
-      "expectedStatus": 400,
+      "expectedStatus": 200,
       "expectedBody": {
-        "error": "string"
+        "text": "string"
       },
       "bodyMatcher": "partial"
     }
