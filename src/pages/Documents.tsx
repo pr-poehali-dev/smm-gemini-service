@@ -82,6 +82,15 @@ export default function Documents() {
     setTopics(newTopics);
   };
 
+  const removeTopic = (index: number) => {
+    const newTopics = topics.filter((_, i) => i !== index);
+    setTopics(newTopics);
+    toast({
+      title: 'Удалено',
+      description: 'Тема удалена из структуры',
+    });
+  };
+
   const generateDocument = async () => {
     if (topics.length === 0) {
       toast({
@@ -292,7 +301,15 @@ export default function Documents() {
                 
                 <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
                   {topics.map((topic, index) => (
-                    <div key={index} className="space-y-2 p-4 bg-muted/50 rounded-lg">
+                    <div key={index} className="space-y-2 p-4 bg-muted/50 rounded-lg relative">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeTopic(index)}
+                        className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <Icon name="X" size={16} />
+                      </Button>
                       <Input
                         value={topic.title}
                         onChange={(e) => updateTopic(index, 'title', e.target.value)}
