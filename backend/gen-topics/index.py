@@ -3,7 +3,7 @@ import os
 import google.generativeai as genai
 
 def handler(event: dict, context) -> dict:
-    '''Генерирует структуру документа (темы разделов) с помощью Gemini 2.5 Flash'''
+    '''Генерирует структуру документа с помощью Gemini 2.5 Flash'''
     
     method = event.get('httpMethod', 'POST')
     
@@ -13,17 +13,18 @@ def handler(event: dict, context) -> dict:
             'headers': {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Max-Age': '86400'
+                'Access-Control-Allow-Headers': 'Content-Type'
             },
-            'body': ''
+            'body': '',
+            'isBase64Encoded': False
         }
     
     if method != 'POST':
         return {
             'statusCode': 405,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': 'Method not allowed'})
+            'body': json.dumps({'error': 'Method not allowed'}),
+            'isBase64Encoded': False
         }
     
     try:
@@ -37,7 +38,8 @@ def handler(event: dict, context) -> dict:
             return {
                 'statusCode': 400,
                 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({'error': 'Не указана тема документа'})
+                'body': json.dumps({'error': 'Не указана тема документа'}),
+                'isBase64Encoded': False
             }
         
         api_key = os.environ.get('GEMINI_API_KEY')
@@ -47,7 +49,8 @@ def handler(event: dict, context) -> dict:
             return {
                 'statusCode': 500,
                 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({'error': 'API ключ не настроен'})
+                'body': json.dumps({'error': 'API ключ не настроен'}),
+                'isBase64Encoded': False
             }
         
         if proxy_url:
@@ -55,7 +58,9 @@ def handler(event: dict, context) -> dict:
             os.environ['HTTPS_PROXY'] = proxy_url
         
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        
+        sections_count = max(3, pages // 3)
         
         prompt = f"""Создай структуру для документа типа "{doc_type}" на тему: {subject}
 
@@ -63,7 +68,7 @@ def handler(event: dict, context) -> dict:
 
 {f'Дополнительные требования: {additional_info}' if additional_info else ''}
 
-Верни ТОЛЬКО валидный JSON массив объектов с такой структурой:
+Верни ТОЛЬКО валидный JSON массив из {sections_count} объектов с такой структурой:
 [
   {{
     "title": "Название раздела",
@@ -71,8 +76,8 @@ def handler(event: dict, context) -> dict:
   }}
 ]
 
-Создай {max(3, pages // 3)} разделов для полного раскрытия темы. Без введения/заключения - только основные разделы.
-Названия делай лаконичными и конкретными. Описания должны быть информативными (2-3 предложения).
+Без введения/заключения - только основные разделы.
+Названия лаконичные и конкретные. Описания информативные (2-3 предложения).
 
 ВАЖНО: Верни ТОЛЬКО JSON, без дополнительного текста, markdown или комментариев!"""
 
@@ -92,18 +97,21 @@ def handler(event: dict, context) -> dict:
         return {
             'statusCode': 200,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'topics': topics}, ensure_ascii=False)
+            'body': json.dumps({'topics': topics}, ensure_ascii=False),
+            'isBase64Encoded': False
         }
         
     except json.JSONDecodeError as e:
         return {
             'statusCode': 500,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': f'Ошибка парсинга JSON: {str(e)}'})
+            'body': json.dumps({'error': f'Ошибка парсинга: {str(e)}'}),
+            'isBase64Encoded': False
         }
     except Exception as e:
         return {
             'statusCode': 500,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': f'Ошибка генерации: {str(e)}'})
+            'body': json.dumps({'error': f'Ошибка: {str(e)}'}),
+            'isBase64Encoded': False
         }

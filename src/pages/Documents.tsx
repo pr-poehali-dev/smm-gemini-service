@@ -39,12 +39,13 @@ export default function Documents() {
     setGeneratedDocument('');
 
     try {
-      const response = await fetch('https://functions.poehali.dev/9c7241f8-e160-4157-aadb-22c4ef67c6d8', {
+      const response = await fetch('https://functions.poehali.dev/338a4621-b5c0-4b9c-be04-0ed58cd55020', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          mode: 'topics',
           docType,
           subject,
           pages,
@@ -95,12 +96,13 @@ export default function Documents() {
     setGeneratedDocument('');
 
     try {
-      const response = await fetch('https://functions.poehali.dev/fb2bbd98-5374-45dd-a776-d5d0713c661b', {
+      const response = await fetch('https://functions.poehali.dev/338a4621-b5c0-4b9c-be04-0ed58cd55020', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          mode: 'document',
           docType,
           subject,
           pages,
