@@ -95,25 +95,30 @@ def handler(event: dict, context) -> dict:
             target_chars = pages * chars_per_page
             chars_per_section = target_chars // len(topics)
             
+            words_per_page = 300
+            target_words = pages * words_per_page
+            words_per_section = target_words // len(topics)
+            
             prompt = f"""Напиши академический {doc_type} на тему: {subject}
 
 СТРУКТУРА ДОКУМЕНТА:
 {topics_structure}
 
 ТРЕБОВАНИЯ:
-- Общий объем: примерно {pages} страниц А4 (~{target_chars} символов)
-- На каждый раздел: ~{chars_per_section} символов
+- Общий объем: примерно {pages} страниц А4 (~{target_words} слов)
+- На каждый раздел: ~{words_per_section} слов
 - Академический стиль, научная терминология
 - Логичное изложение с примерами
 - Между разделами должна быть связь
 - НЕ нужно оглавление, список литературы или титульный лист
 - Начинай сразу с введения и основных разделов
+- Пиши КРАТКО и по делу - не раздувай текст водой
 
 {f'Дополнительные требования: {additional_info}' if additional_info else ''}
 
 Формат ответа:
 ВВЕДЕНИЕ
-[текст введения]
+[текст введения - 2-3 абзаца]
 
 1. [Название первого раздела]
 [полный текст раздела]
@@ -124,9 +129,9 @@ def handler(event: dict, context) -> dict:
 ...
 
 ЗАКЛЮЧЕНИЕ
-[текст заключения]
+[текст заключения - 2-3 абзаца]
 
-Пиши подробно, раскрывай каждую тему полностью. Используй абзацы для структуры."""
+ВАЖНО: Соблюдай указанный объем! Не пиши слишком много - это должно быть ровно {target_words} слов."""
 
         gemini_url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={api_key}'
         
@@ -147,7 +152,7 @@ def handler(event: dict, context) -> dict:
             opener = urllib.request.build_opener(proxy_handler)
             urllib.request.install_opener(opener)
         
-        with urllib.request.urlopen(req, timeout=30) as response:
+        with urllib.request.urlopen(req, timeout=90) as response:
             gemini_response = json.loads(response.read().decode('utf-8'))
         
         if 'candidates' in gemini_response and gemini_response['candidates']:
